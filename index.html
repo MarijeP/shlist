@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Shopping List</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -25,12 +25,117 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding: 40px 16px 80px;
   }
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 18px;
+    padding: 48px 40px 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+  }
+
+  .login-card h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .login-card h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .login-subtitle {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 300;
+    margin-bottom: 32px;
+  }
+
+  .field { margin-bottom: 14px; }
+
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus { border-color: var(--accent); background: white; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .login-error {
+    background: #fdf0ee;
+    border: 1.5px solid #f5c0b8;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    color: var(--danger);
+    margin-top: 14px;
+    display: none;
+  }
+
+  /* ── APP SCREEN ── */
+  #app-screen { display: none; padding: 40px 16px 80px; }
 
   .container { max-width: 560px; margin: 0 auto; }
 
-  header { margin-bottom: 36px; }
+  header { margin-bottom: 32px; }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
 
   h1 {
     font-family: 'DM Serif Display', serif;
@@ -40,14 +145,25 @@
     line-height: 1.1;
   }
 
-  .subtitle {
+  .btn-signout {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
     color: var(--muted);
-    font-size: 0.85rem;
-    font-weight: 300;
-    margin-top: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-top: 6px;
+    transition: border-color 0.2s, color 0.2s;
+    flex-shrink: 0;
   }
 
-  /* Sync status */
+  .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
+
+  .subtitle { color: var(--muted); font-size: 0.85rem; font-weight: 300; margin-top: 4px; }
+
   .sync-status {
     display: inline-flex;
     align-items: center;
@@ -70,32 +186,7 @@
 
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  /* Config banner */
-  .config-banner {
-    background: #fff8e6;
-    border: 1.5px solid #f0d080;
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 24px;
-    font-size: 0.88rem;
-    line-height: 1.6;
-    color: #7a5c00;
-  }
-
-  .config-banner strong { display: block; margin-bottom: 4px; font-size: 0.92rem; }
-  .config-banner code {
-    background: rgba(0,0,0,0.06);
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-  }
-
-  /* Add item form */
-  .add-form {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 28px;
-  }
+  .add-form { display: flex; gap: 8px; margin-bottom: 28px; }
 
   .add-form input[type="text"] {
     flex: 1;
@@ -122,10 +213,7 @@
     outline: none;
     color: var(--text);
     cursor: pointer;
-    transition: border-color 0.2s;
   }
-
-  .add-form select:focus { border-color: var(--accent); }
 
   .btn-add {
     padding: 12px 20px;
@@ -144,11 +232,7 @@
   .btn-add:hover { opacity: 0.88; }
   .btn-add:active { transform: scale(0.97); }
 
-  /* Category section */
-  .category-block {
-    margin-bottom: 24px;
-    animation: fadeIn 0.3s ease;
-  }
+  .category-block { margin-bottom: 24px; animation: fadeIn 0.3s ease; }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
@@ -251,141 +335,231 @@
   .checked-section.visible { display: block; }
   .checked-section .item-name { color: var(--checked-text); text-decoration: line-through; }
 
-  .empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--muted);
-    font-size: 0.9rem;
-    font-weight: 300;
-  }
-
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.9rem; font-weight: 300; }
   .empty span { display: block; font-size: 1.8rem; margin-bottom: 8px; }
+
+  .config-banner {
+    background: #fff8e6;
+    border: 1.5px solid #f0d080;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #7a5c00;
+  }
+  .config-banner strong { display: block; margin-bottom: 4px; }
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <h1>Shopping List</h1>
-    <p class="subtitle" id="stats-text">Loading…</p>
-    <div class="sync-status">
-      <div class="sync-dot connecting" id="sync-dot"></div>
-      <span id="sync-label">Connecting…</span>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>My <em>Shopping</em><br>List</h1>
+    <p class="login-subtitle">Sign in to access your list</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
     </div>
-  </header>
-
-  <div class="config-banner" id="config-banner" style="display:none">
-    <strong>⚠️ Firebase not configured yet</strong>
-    Open this file in a text editor and replace the placeholder values near the bottom with your Firebase config. See the setup instructions for details.
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="login-btn" onclick="signIn()">Sign in</button>
+    <div class="login-error" id="login-error"></div>
   </div>
-
-  <div class="add-form">
-    <input type="text" id="item-input" placeholder="Add an item…" autocomplete="off">
-    <select id="category-select">
-      <option value="General">General</option>
-      <option value="Produce">Produce</option>
-      <option value="Dairy">Dairy</option>
-      <option value="Meat">Meat</option>
-      <option value="Bakery">Bakery</option>
-      <option value="Pantry">Pantry</option>
-      <option value="Frozen">Frozen</option>
-      <option value="Drinks">Drinks</option>
-      <option value="Household">Household</option>
-      <option value="Other">Other</option>
-    </select>
-    <button class="btn-add" onclick="addItem()">Add</button>
-  </div>
-
-  <div id="active-list"></div>
-
-  <button class="checked-toggle" id="checked-toggle" onclick="toggleChecked()" style="display:none">
-    <span id="checked-label">🗂 Checked off items</span>
-    <span class="arrow">▼</span>
-  </button>
-  <div class="checked-section" id="checked-section"></div>
 </div>
 
-<!-- Firebase SDK -->
+<!-- APP SCREEN -->
+<div id="app-screen">
+  <div class="container">
+    <header>
+      <div class="header-top">
+        <h1>Shopping List</h1>
+        <button class="btn-signout" onclick="signOut()">Sign out</button>
+      </div>
+      <p class="subtitle" id="stats-text">Loading…</p>
+      <div class="sync-status">
+        <div class="sync-dot connecting" id="sync-dot"></div>
+        <span id="sync-label">Connecting…</span>
+      </div>
+    </header>
+
+    <div class="config-banner" id="config-banner" style="display:none">
+      <strong>⚠️ Firebase not configured yet</strong>
+      Open this file in a text editor and replace the placeholder values in the firebaseConfig block with your real Firebase config.
+    </div>
+
+    <div class="add-form">
+      <input type="text" id="item-input" placeholder="Add an item…" autocomplete="off">
+      <select id="category-select">
+        <option value="General">General</option>
+        <option value="Produce">Produce</option>
+        <option value="Dairy">Dairy</option>
+        <option value="Meat">Meat</option>
+        <option value="Bakery">Bakery</option>
+        <option value="Pantry">Pantry</option>
+        <option value="Frozen">Frozen</option>
+        <option value="Drinks">Drinks</option>
+        <option value="Household">Household</option>
+        <option value="Other">Other</option>
+      </select>
+      <button class="btn-add" onclick="addItem()">Add</button>
+    </div>
+
+    <div id="active-list"></div>
+
+    <button class="checked-toggle" id="checked-toggle" onclick="toggleChecked()" style="display:none">
+      <span id="checked-label">🗂 Checked off items</span>
+      <span class="arrow">▼</span>
+    </button>
+    <div class="checked-section" id="checked-section"></div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getDatabase, ref, push, update, remove, onValue, off }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
   // ================================================================
   // PASTE YOUR FIREBASE CONFIG HERE — replace every value below
   // ================================================================
   const firebaseConfig = {
-    apiKey: "AIzaSyCP8qyXDwXKjFcTvOrH5Y-PL9JoC-lzLi0",
-    authDomain: "shlist-7466f.firebaseapp.com",
-    databaseURL: "https://shlist-7466f-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "shlist-7466f",
-    storageBucket: "shlist-7466f.firebasestorage.app",
-    messagingSenderId: "678202976422",
-    appId: "1:678202976422:web:6ff000ebcd0909a217ec67",
-    measurementId: "G-EFWXV5029Q"
+    apiKey:            "PASTE_YOUR_apiKey_HERE",
+    authDomain:        "PASTE_YOUR_authDomain_HERE",
+    databaseURL:       "PASTE_YOUR_databaseURL_HERE",
+    projectId:         "PASTE_YOUR_projectId_HERE",
+    storageBucket:     "PASTE_YOUR_storageBucket_HERE",
+    messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
+    appId:             "PASTE_YOUR_appId_HERE"
   };
   // ================================================================
 
-  const isConfigured = !Object.values(firebaseConfig).some(v => v.startsWith('PASTE_'));
+  const isConfigured = !Object.values(firebaseConfig).some(v => String(v).startsWith('PASTE_'));
 
   if (!isConfigured) {
     document.getElementById('config-banner').style.display = 'block';
-    document.getElementById('stats-text').textContent = 'Not connected';
-    setSyncStatus('error', 'Not configured');
-  } else {
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const listRef = ref(db, 'shoppingList');
+    showApp();
+  }
 
+  const app = isConfigured ? initializeApp(firebaseConfig) : null;
+  const auth = isConfigured ? getAuth(app) : null;
+  const db = isConfigured ? getDatabase(app) : null;
+
+  let items = [];
+  let currentListRef = null;
+
+  if (auth) {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        showApp();
+        connectList(user.uid);
+      } else {
+        showLogin();
+        disconnectList();
+      }
+    });
+  }
+
+  function showLogin() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+
+  function showApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+  }
+
+  function connectList(uid) {
+    disconnectList();
+    currentListRef = ref(db, `users/${uid}/shoppingList`);
     setSyncStatus('connecting', 'Connecting…');
-
-    // Listen for real-time changes
-    onValue(listRef, (snapshot) => {
+    onValue(currentListRef, (snapshot) => {
       const data = snapshot.val();
       items = data ? Object.entries(data).map(([id, val]) => ({ id, ...val })) : [];
       setSyncStatus('connected', 'Synced');
       render();
-    }, (error) => {
-      setSyncStatus('error', 'Connection error');
-      document.getElementById('stats-text').textContent = 'Could not connect';
-    });
-
-    window.addItem = function() {
-      const input = document.getElementById('item-input');
-      const cat = document.getElementById('category-select').value;
-      const name = input.value.trim();
-      if (!name) return;
-      push(listRef, { name, category: cat, checked: false });
-      input.value = '';
-      input.focus();
-    };
-
-    window.toggleCheck = function(id) {
-      const item = items.find(i => i.id === id);
-      if (item) update(ref(db, `shoppingList/${id}`), { checked: !item.checked });
-    };
-
-    window.deleteItem = function(id) {
-      remove(ref(db, `shoppingList/${id}`));
-    };
+    }, () => setSyncStatus('error', 'Connection error'));
   }
+
+  function disconnectList() {
+    if (currentListRef) { off(currentListRef); currentListRef = null; }
+    items = [];
+  }
+
+  window.signIn = async function() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('login-btn');
+    const errEl = document.getElementById('login-error');
+
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      errEl.textContent = friendlyAuthError(e.code);
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Sign in';
+    }
+  };
+
+  window.signOut = async function() {
+    await fbSignOut(auth);
+  };
+
+  function friendlyAuthError(code) {
+    if (['auth/invalid-credential','auth/wrong-password','auth/user-not-found'].includes(code))
+      return 'Incorrect email or password. Please try again.';
+    if (code === 'auth/invalid-email') return 'Please enter a valid email address.';
+    if (code === 'auth/too-many-requests') return 'Too many attempts. Please try again later.';
+    return 'Something went wrong. Please try again.';
+  }
+
+  window.addItem = function() {
+    if (!currentListRef) return;
+    const input = document.getElementById('item-input');
+    const cat = document.getElementById('category-select').value;
+    const name = input.value.trim();
+    if (!name) return;
+    push(currentListRef, { name, category: cat, checked: false });
+    input.value = '';
+    input.focus();
+  };
+
+  window.toggleCheck = function(id) {
+    const item = items.find(i => i.id === id);
+    if (item && db && auth.currentUser)
+      update(ref(db, `users/${auth.currentUser.uid}/shoppingList/${id}`), { checked: !item.checked });
+  };
+
+  window.deleteItem = function(id) {
+    if (db && auth.currentUser)
+      remove(ref(db, `users/${auth.currentUser.uid}/shoppingList/${id}`));
+  };
+
+  window.toggleChecked = function() {
+    document.getElementById('checked-section').classList.toggle('visible');
+    document.getElementById('checked-toggle').classList.toggle('open');
+  };
 
   function setSyncStatus(state, label) {
     const dot = document.getElementById('sync-dot');
     const lbl = document.getElementById('sync-label');
-    dot.className = 'sync-dot ' + state;
-    lbl.textContent = label;
+    if (dot) dot.className = 'sync-dot ' + state;
+    if (lbl) lbl.textContent = label;
   }
 
-  let items = [];
-
-  window.toggleChecked = function() {
-    const sec = document.getElementById('checked-section');
-    const btn = document.getElementById('checked-toggle');
-    sec.classList.toggle('visible');
-    btn.classList.toggle('open');
-  };
-
   function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function render() {
@@ -393,14 +567,15 @@
     const checked = items.filter(i => i.checked);
 
     const statsEl = document.getElementById('stats-text');
-    if (items.length === 0) {
-      statsEl.textContent = 'Nothing here yet — add your first item';
-    } else {
-      statsEl.textContent = `${active.length} item${active.length !== 1 ? 's' : ''} remaining${checked.length ? ` · ${checked.length} checked off` : ''}`;
+    if (statsEl) {
+      statsEl.textContent = items.length === 0
+        ? 'Nothing here yet — add your first item'
+        : `${active.length} item${active.length !== 1 ? 's' : ''} remaining${checked.length ? ` · ${checked.length} checked off` : ''}`;
     }
 
-    // Active items
     const activeEl = document.getElementById('active-list');
+    if (!activeEl) return;
+
     if (active.length === 0) {
       activeEl.innerHTML = checked.length === 0
         ? `<div class="empty"><span>🛒</span>Your list is empty</div>`
@@ -418,14 +593,12 @@
                   <input type="checkbox" class="item-check" onchange="toggleCheck('${item.id}')">
                   <span class="item-name">${escHtml(item.name)}</span>
                   <button class="btn-delete" onclick="deleteItem('${item.id}')" title="Remove">✕</button>
-                </li>
-              `).join('')}
+                </li>`).join('')}
             </ul>
           </div>`;
       }).join('');
     }
 
-    // Checked section
     const toggleBtn = document.getElementById('checked-toggle');
     const checkedEl = document.getElementById('checked-section');
 
@@ -447,17 +620,19 @@
                   <input type="checkbox" class="item-check" checked onchange="toggleCheck('${item.id}')">
                   <span class="item-name">${escHtml(item.name)}</span>
                   <button class="btn-delete" onclick="deleteItem('${item.id}')" title="Remove">✕</button>
-                </li>
-              `).join('')}
+                </li>`).join('')}
             </ul>
           </div>`;
       }).join('');
     }
   }
 
-  // Enter key to add
-  document.getElementById('item-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') window.addItem && window.addItem();
+  document.getElementById('item-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.addItem();
+  });
+
+  document.getElementById('login-password')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.signIn();
   });
 </script>
 </body>
