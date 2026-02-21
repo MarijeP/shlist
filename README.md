@@ -1,2 +1,2 @@
 # shlist
-A simple shopping list app
+A simple shopping list and recipe app
