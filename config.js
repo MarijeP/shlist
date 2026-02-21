@@ -1,7 +1,7 @@
 // ================================================================
 // YOUR FIREBASE CONFIG — fill this in once and never touch it again
 // ================================================================
-export const firebaseConfig = {
+window.firebaseConfig = {
   apiKey: "AIzaSyCP8qyXDwXKjFcTvOrH5Y-PL9JoC-lzLi0",
   authDomain: "shlist-7466f.firebaseapp.com",
   databaseURL: "https://shlist-7466f-default-rtdb.europe-west1.firebasedatabase.app",
