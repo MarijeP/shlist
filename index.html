@@ -390,6 +390,26 @@
   .modal-actions { display:flex; gap:8px; margin-top:20px; }
   .modal-actions .btn-primary { flex:1; width:auto; margin-top:0; padding:11px; }
   .modal-actions .btn-secondary { padding:11px 18px; }
+
+  /* ── URL IMPORT MODAL ── */
+  .url-import-modal { background:var(--surface); border-radius:16px; padding:28px 24px 24px; width:100%; max-width:460px; box-shadow:0 8px 40px rgba(0,0,0,0.12); transform:translateY(12px); transition:transform 0.2s; }
+  .modal-overlay.open .url-import-modal { transform:translateY(0); }
+  .url-import-modal h3 { font-family:'DM Serif Display',serif; font-size:1.3rem; font-weight:400; margin-bottom:6px; }
+  .url-import-modal .modal-subtitle { font-size:0.82rem; color:var(--muted); font-weight:300; margin-bottom:20px; }
+  .url-import-modal .url-row { display:flex; gap:8px; }
+  .url-import-modal .url-row input { flex:1; padding:11px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.92rem; background:var(--bg); color:var(--text); outline:none; transition:border-color 0.2s; }
+  .url-import-modal .url-row input:focus { border-color:var(--accent); }
+  .url-import-modal .url-row button { padding:11px 18px; background:var(--accent); color:white; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:500; cursor:pointer; white-space:nowrap; transition:opacity 0.2s; }
+  .url-import-modal .url-row button:hover { opacity:0.88; }
+  .url-import-modal .url-row button:disabled { opacity:0.5; cursor:not-allowed; }
+  .import-status { margin-top:16px; padding:12px 14px; border-radius:10px; font-size:0.88rem; display:none; }
+  .import-status.loading { background:#f0f8f4; color:var(--accent); border:1.5px solid #c8e8d8; display:block; }
+  .import-status.error { background:#fdf0ee; color:var(--danger); border:1.5px solid #f5c0b8; display:block; }
+  .import-status .spinner { display:inline-block; width:12px; height:12px; border:2px solid var(--accent); border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; margin-right:8px; vertical-align:middle; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .btn-import-manual { margin-top:14px; background:none; border:none; font-family:'DM Sans',sans-serif; font-size:0.83rem; color:var(--muted); cursor:pointer; text-decoration:underline; padding:0; }
+  .btn-import-manual:hover { color:var(--accent); }
+
   .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:white; padding:10px 20px; border-radius:10px; font-size:0.88rem; opacity:0; transition:opacity 0.3s,transform 0.3s; pointer-events:none; z-index:100; white-space:nowrap; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
@@ -493,7 +513,7 @@
           <option value="Condiments">Condiments</option>
           <option value="Drinks">Drinks</option>
         </select>
-        <button class="btn-new-recipe" onclick="openNewRecipeForm()">+ New recipe</button>
+        <button class="btn-new-recipe" onclick="openUrlImportModal()">+ New recipe</button>
       </div>
       <div class="recipe-grid" id="recipe-grid"></div>
     </div>
@@ -598,6 +618,18 @@
       <button class="btn-primary" onclick="saveEditItem()">Save</button>
       <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
     </div>
+  </div>
+</div>
+<div class="modal-overlay" id="url-import-modal" onclick="closeUrlImportModal(event)">
+  <div class="url-import-modal">
+    <h3>Add a recipe</h3>
+    <p class="modal-subtitle">Paste a link from any recipe website and Claude will import it automatically</p>
+    <div class="url-row">
+      <input type="url" id="import-url-input" placeholder="https://www.example.com/recipe...">
+      <button id="import-url-btn" onclick="importFromUrl()">Import</button>
+    </div>
+    <div class="import-status" id="import-status"></div>
+    <button class="btn-import-manual" onclick="closeUrlImportModal(); openNewRecipeForm()">Or enter recipe manually →</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -1077,6 +1109,116 @@
     return s;
   }
 
+
+  // ── URL Import ──
+  window.openUrlImportModal = function() {
+    document.getElementById('import-url-input').value = '';
+    document.getElementById('import-status').className = 'import-status';
+    document.getElementById('import-status').innerHTML = '';
+    document.getElementById('import-url-btn').disabled = false;
+    document.getElementById('import-url-btn').textContent = 'Import';
+    document.getElementById('url-import-modal').classList.add('open');
+    setTimeout(() => document.getElementById('import-url-input').focus(), 50);
+  };
+
+  window.closeUrlImportModal = function(e) {
+    if (e && e.target !== document.getElementById('url-import-modal')) return;
+    document.getElementById('url-import-modal').classList.remove('open');
+  };
+
+  window.importFromUrl = async function() {
+    const url = document.getElementById('import-url-input').value.trim();
+    if (!url) return;
+
+    const btn = document.getElementById('import-url-btn');
+    const status = document.getElementById('import-status');
+
+    btn.disabled = true;
+    btn.textContent = 'Importing…';
+    status.className = 'import-status loading';
+    status.innerHTML = '<span class="spinner"></span> Claude is reading the recipe…';
+
+    try {
+      // Fetch the page content via a CORS proxy
+      const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+      const pageRes = await fetch(proxyUrl);
+      const pageData = await pageRes.json();
+
+      if (!pageData.contents) throw new Error('Could not fetch the page.');
+
+      // Strip HTML tags to get plain text for Claude
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(pageData.contents, 'text/html');
+      // Remove scripts and styles
+      doc.querySelectorAll('script, style, nav, footer, header, aside').forEach(el => el.remove());
+      const pageText = (doc.body?.innerText || doc.body?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 8000);
+
+      if (!pageText || pageText.length < 100) throw new Error('Could not extract text from this page.');
+
+      status.innerHTML = '<span class="spinner"></span> Extracting recipe details…';
+
+      // Call Claude API
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          system: 'You are a recipe extraction assistant. Extract recipe details from the provided webpage text and return ONLY valid JSON with no markdown, no backticks, no explanation. Return exactly this structure: {"name":"","category":"","source":"","ingredients":[{"qty":"","name":""}],"method":"","notes":""}. For category choose one of: Breakfast, Lunch, Dinner, Baking, Soups, Salads, Desserts, Snacks, Condiments, Drinks. If unsure use Dinner. Keep method as plain text with newlines between steps. Keep notes brief.',
+          messages: [{ role: 'user', content: 'Extract the recipe from this webpage text. URL: ' + url + '\n\n' + pageText }]
+        })
+      });
+
+      if (!claudeRes.ok) throw new Error('Claude API error: ' + claudeRes.status);
+
+      const claudeData = await claudeRes.json();
+      const rawText = claudeData.content.map(b => b.text || '').join('').trim();
+
+      let recipe;
+      try {
+        recipe = JSON.parse(rawText);
+      } catch(e) {
+        // Try to extract JSON if wrapped in anything
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) recipe = JSON.parse(jsonMatch[0]);
+        else throw new Error('Could not parse recipe data.');
+      }
+
+      if (!recipe.name) throw new Error('No recipe found on this page.');
+
+      // Close modal and populate form
+      document.getElementById('url-import-modal').classList.remove('open');
+
+      // Open form with extracted data
+      editingRecipeId = null; photoBase64 = null;
+      document.getElementById('form-title').textContent = 'New Recipe';
+      document.getElementById('rf-name').value = recipe.name || '';
+      document.getElementById('rf-category').value = recipe.category || 'Dinner';
+      document.getElementById('rf-source').value = recipe.source || url;
+      document.getElementById('rf-method').value = recipe.method || '';
+      document.getElementById('rf-notes').value = recipe.notes || '';
+      document.getElementById('photo-preview').style.display = 'none';
+      document.getElementById('photo-placeholder').style.display = 'block';
+
+      const builder = document.getElementById('ingredient-builder');
+      builder.innerHTML = '';
+      if (recipe.ingredients && recipe.ingredients.length) {
+        recipe.ingredients.forEach(ing => addIngredientRow(ing.qty || '', ing.name || ''));
+      } else {
+        addIngredientRow();
+      }
+
+      showFormView();
+      showToast('Recipe imported! Review and save when ready.');
+
+    } catch(err) {
+      status.className = 'import-status error';
+      status.textContent = '⚠ ' + (err.message || 'Something went wrong. Try entering the recipe manually.');
+      btn.disabled = false;
+      btn.textContent = 'Try again';
+    }
+  };
+
   let editingItemId = null;
 
   window.openEditItem = function(id) {
@@ -1107,6 +1249,7 @@
   document.getElementById('item-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.addItem(); });
   document.getElementById('login-password')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.signIn(); });
   document.getElementById('edit-item-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.saveEditItem(); if (e.key === 'Escape') window.closeEditModal(); });
+  document.getElementById('import-url-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.importFromUrl(); if (e.key === 'Escape') window.closeUrlImportModal(); });
 </script>
 </body>
 </html>
