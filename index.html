@@ -1186,3 +1186,38 @@
       btn.textContent = 'Try again';
     }
   };
+
+  let editingItemId = null;
+
+  window.openEditItem = function(id) {
+    const item = shoppingItems.find(i => i.id === id);
+    if (!item) return;
+    editingItemId = id;
+    document.getElementById('edit-item-name').value = item.name;
+    document.getElementById('edit-item-category').value = item.category || 'Other';
+    document.getElementById('edit-modal').classList.add('open');
+    setTimeout(() => document.getElementById('edit-item-name').select(), 50);
+  };
+
+  window.saveEditItem = function() {
+    if (!editingItemId || !db || !auth.currentUser) return;
+    const name = document.getElementById('edit-item-name').value.trim();
+    const category = document.getElementById('edit-item-category').value;
+    if (!name) return;
+    update(ref(db, `users/${auth.currentUser.uid}/shoppingList/${editingItemId}`), { name, category });
+    closeEditModal();
+  };
+
+  window.closeEditModal = function(e) {
+    if (e && e.target !== document.getElementById('edit-modal')) return;
+    document.getElementById('edit-modal').classList.remove('open');
+    editingItemId = null;
+  };
+
+  document.getElementById('item-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.addItem(); });
+  document.getElementById('login-password')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.signIn(); });
+  document.getElementById('edit-item-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.saveEditItem(); if (e.key === 'Escape') window.closeEditModal(); });
+  document.getElementById('import-url-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.importFromUrl(); if (e.key === 'Escape') window.closeUrlImportModal(); });
+</script>
+</body>
+</html>
