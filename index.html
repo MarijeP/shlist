@@ -333,9 +333,13 @@
   .section-title { font-size:0.72rem; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; margin-top:24px; }
 
   .ingredients-list { background:var(--surface); border:1.5px solid var(--border); border-radius:12px; overflow:hidden; list-style:none; }
-  .ingredient-row { display:flex; gap:12px; padding:11px 16px; border-bottom:1px solid var(--border); font-size:0.92rem; }
+  .ingredient-row { display:flex; gap:12px; padding:11px 16px; border-bottom:1px solid var(--border); font-size:0.92rem; align-items:center; }
   .ingredient-row:last-child { border-bottom:none; }
   .ingredient-qty { color:var(--muted); min-width:80px; font-weight:300; }
+  .ingredient-row .ing-name { flex:1; }
+  .btn-add-ing { background:none; border:1.5px solid var(--border); border-radius:7px; padding:3px 9px; font-family:'DM Sans',sans-serif; font-size:0.75rem; color:var(--muted); cursor:pointer; white-space:nowrap; transition:border-color 0.2s,color 0.2s,background 0.2s; flex-shrink:0; }
+  .btn-add-ing:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-add-ing.added { background:#e9f5ef; border-color:#c8e8d8; color:var(--accent); }
 
   .method-text { background:var(--surface); border:1.5px solid var(--border); border-radius:12px; padding:16px; font-size:0.92rem; font-weight:300; line-height:1.7; }
   .method-text p, .notes-text p { margin-bottom: 0.6em; }
@@ -892,10 +896,11 @@
     const ingredientsHtml = r.ingredients && r.ingredients.length
       ? `<div class="section-title">Ingredients</div>
          <ul class="ingredients-list">
-           ${r.ingredients.map(ing => `
+           ${r.ingredients.map((ing, idx) => `
              <li class="ingredient-row">
                <span class="ingredient-qty">${escHtml(ing.qty || '')}</span>
-               <span>${escHtml(ing.name)}</span>
+               <span class="ing-name">${escHtml(ing.name)}</span>
+               <button class="btn-add-ing" id="ing-btn-${id}-${idx}" onclick="addSingleIngredient('${id}', ${idx}, this)">+ List</button>
              </li>`).join('')}
          </ul>`
       : '';
@@ -934,6 +939,17 @@
     const btn = document.getElementById('add-to-list-btn');
     if (btn) { btn.textContent = '✅ Added to list!'; btn.classList.add('added'); }
     showToast(`${r.ingredients.length} ingredient${r.ingredients.length !== 1 ? 's' : ''} added to your shopping list`);
+  };
+
+  window.addSingleIngredient = function(recipeId, idx, btn) {
+    const r = recipes.find(r => r.id === recipeId);
+    if (!r || !r.ingredients || !shoppingRef) return;
+    const ing = r.ingredients[idx];
+    if (!ing) return;
+    push(shoppingRef, { name: ing.name, qty: ing.qty || '', category: 'General', checked: false });
+    btn.textContent = '✓ Added';
+    btn.classList.add('added');
+    btn.disabled = true;
   };
 
   window.deleteRecipe = function(id) {
