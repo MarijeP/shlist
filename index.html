@@ -271,6 +271,9 @@
   .item-check:checked::after { content:''; position:absolute; left:5px; top:2px; width:6px; height:10px; border:2px solid white; border-top:none; border-left:none; transform:rotate(45deg); }
 
   .item-name { flex: 1; font-size: 0.93rem; font-weight: 300; }
+  .item-qty { font-size: 0.82rem; font-weight: 500; color: var(--accent); min-width: 36px; flex-shrink: 0; }
+  .item.checked .item-qty { color: var(--checked-text); }
+  .qty-field { width: 72px; flex-shrink: 0; }
 
   .btn-icon { background:none; border:none; cursor:pointer; color:var(--border); font-size:1rem; padding:2px 4px; border-radius:4px; transition:color 0.15s; flex-shrink:0; }
   .btn-icon:hover { color: var(--danger); }
@@ -467,6 +470,7 @@
         Open this file in a text editor and replace the placeholder values in the firebaseConfig block.
       </div>
       <div class="add-form">
+        <input type="text" id="qty-input" placeholder="Qty" autocomplete="off" class="qty-field">
         <input type="text" id="item-input" placeholder="Add an item…" autocomplete="off">
         <select id="category-select" onchange="addItem()">
           <option value="Bakery">Bakery</option>
@@ -596,6 +600,10 @@
 <div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
   <div class="modal">
     <h3>Edit item</h3>
+    <div class="form-field">
+      <label>Quantity</label>
+      <input type="text" id="edit-item-qty" placeholder="e.g. 2, 500g, 1 bunch">
+    </div>
     <div class="form-field">
       <label>Item name</label>
       <input type="text" id="edit-item-name" placeholder="Item name">
@@ -742,12 +750,15 @@
   window.addItem = function() {
     if (!shoppingRef) return;
     const input = document.getElementById('item-input');
+    const qtyInput = document.getElementById('qty-input');
     const sel = document.getElementById('category-select');
     const cat = sel.value;
     const name = input.value.trim();
+    const qty = qtyInput ? qtyInput.value.trim() : '';
     if (!name) return;
-    push(shoppingRef, { name, category: cat, checked: false });
+    push(shoppingRef, { name, qty: qty || '', category: cat, checked: false });
     input.value = '';
+    if (qtyInput) qtyInput.value = '';
     sel.selectedIndex = 0;
     input.focus();
   };
@@ -800,6 +811,7 @@
             ${catItems.map(item => `
               <li class="item">
                 <input type="checkbox" class="item-check" onchange="toggleCheck('${item.id}')">
+                ${item.qty ? `<span class="item-qty">${escHtml(item.qty)}</span>` : ''}
                 <span class="item-name">${escHtml(item.name)}</span>
                 <button class="btn-icon" onclick="openEditItem('${item.id}')" title="Edit" style="color:var(--muted);font-size:0.85rem">✎</button>
                 <button class="btn-icon" onclick="deleteItem('${item.id}')" title="Remove">✕</button>
@@ -824,6 +836,7 @@
             ${catItems.map(item => `
               <li class="item checked">
                 <input type="checkbox" class="item-check" checked onchange="toggleCheck('${item.id}')">
+                ${item.qty ? `<span class="item-qty">${escHtml(item.qty)}</span>` : ''}
                 <span class="item-name">${escHtml(item.name)}</span>
                 <button class="btn-icon" onclick="openEditItem('${item.id}')" title="Edit" style="color:var(--muted);font-size:0.85rem">✎</button>
                 <button class="btn-icon" onclick="deleteItem('${item.id}')" title="Remove">✕</button>
@@ -916,8 +929,7 @@
     const r = recipes.find(r => r.id === id);
     if (!r || !r.ingredients || !shoppingRef) return;
     r.ingredients.forEach(ing => {
-      const name = ing.qty ? `${ing.qty} ${ing.name}` : ing.name;
-      push(shoppingRef, { name, category: 'General', checked: false });
+      push(shoppingRef, { name: ing.name, qty: ing.qty || '', category: 'General', checked: false });
     });
     const btn = document.getElementById('add-to-list-btn');
     if (btn) { btn.textContent = '✅ Added to list!'; btn.classList.add('added'); }
@@ -1199,6 +1211,7 @@
     const item = shoppingItems.find(i => i.id === id);
     if (!item) return;
     editingItemId = id;
+    document.getElementById('edit-item-qty').value = item.qty || '';
     document.getElementById('edit-item-name').value = item.name;
     document.getElementById('edit-item-category').value = item.category || 'Other';
     document.getElementById('edit-modal').classList.add('open');
@@ -1208,9 +1221,10 @@
   window.saveEditItem = function() {
     if (!editingItemId || !db || !auth.currentUser) return;
     const name = document.getElementById('edit-item-name').value.trim();
+    const qty = document.getElementById('edit-item-qty').value.trim();
     const category = document.getElementById('edit-item-category').value;
     if (!name) return;
-    update(ref(db, `users/${auth.currentUser.uid}/shoppingList/${editingItemId}`), { name, category });
+    update(ref(db, `users/${auth.currentUser.uid}/shoppingList/${editingItemId}`), { name, qty: qty || '', category });
     closeEditModal();
   };
 
