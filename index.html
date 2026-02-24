@@ -417,6 +417,38 @@
   .btn-import-manual { margin-top:14px; background:none; border:none; font-family:'DM Sans',sans-serif; font-size:0.83rem; color:var(--muted); cursor:pointer; text-decoration:underline; padding:0; }
   .btn-import-manual:hover { color:var(--accent); }
 
+
+  /* ── TAGS ── */
+  .tag-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:500; letter-spacing:0.04em; cursor:default; white-space:nowrap; }
+  .tag-chip.clickable { cursor:pointer; transition:opacity 0.15s; }
+  .tag-chip.clickable:hover { opacity:0.75; }
+  .recipe-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+  .recipe-card-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+  .recipe-card-tags .tag-chip { font-size:0.65rem; padding:2px 8px; }
+
+  /* Tag toggle in form */
+  .tag-toggles { display:flex; flex-wrap:wrap; gap:8px; }
+  .tag-toggle { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px; border:1.5px solid var(--border); font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:400; cursor:pointer; background:none; color:var(--muted); transition:all 0.15s; }
+  .tag-toggle.selected { color:white; border-color:transparent; }
+  .tag-toggle:hover:not(.selected) { border-color:var(--muted); color:var(--text); }
+
+  /* Settings panel */
+  .settings-section { margin-bottom:32px; }
+  .settings-section h3 { font-family:'DM Serif Display',serif; font-size:1.3rem; font-weight:400; margin-bottom:6px; }
+  .settings-section .section-desc { font-size:0.85rem; color:var(--muted); font-weight:300; margin-bottom:18px; }
+  .tags-manager { display:flex; flex-direction:column; gap:10px; }
+  .tag-manager-row { display:flex; align-items:center; gap:10px; background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:10px 14px; }
+  .tag-manager-row .tag-chip { pointer-events:none; }
+  .tag-manager-row .tag-name { flex:1; font-size:0.92rem; font-weight:300; }
+  .tag-color-swatch { width:16px; height:16px; border-radius:50%; flex-shrink:0; }
+  .add-tag-form { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
+  .add-tag-form input[type="text"] { flex:1; min-width:120px; padding:10px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.9rem; background:var(--surface); color:var(--text); outline:none; transition:border-color 0.2s; }
+  .add-tag-form input[type="text"]:focus { border-color:var(--accent); }
+  .color-picker-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .color-btn { width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer; transition:transform 0.15s, border-color 0.15s; flex-shrink:0; }
+  .color-btn:hover { transform:scale(1.15); }
+  .color-btn.selected { border-color:var(--text); }
+
   .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:white; padding:10px 20px; border-radius:10px; font-size:0.88rem; opacity:0; transition:opacity 0.3s,transform 0.3s; pointer-events:none; z-index:100; white-space:nowrap; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
@@ -454,6 +486,7 @@
     <div class="tabs">
       <button class="tab active" id="tab-shopping" onclick="switchTab('shopping')">🛒 Shopping</button>
       <button class="tab" id="tab-recipes" onclick="switchTab('recipes')">🍳 Recipes</button>
+      <button class="tab" id="tab-settings" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
     <button class="btn-signout" onclick="signOut()">Sign out</button>
   </div>
@@ -524,9 +557,31 @@
           <option value="Condiments">Condiments</option>
           <option value="Drinks">Drinks</option>
         </select>
+        <select id="tag-filter" onchange="renderRecipes()" style="display:none"><option value="">All tags</option></select>
         <button class="btn-new-recipe" onclick="openUrlImportModal()">+ New recipe</button>
       </div>
       <div class="recipe-grid" id="recipe-grid"></div>
+    </div>
+  </div>
+
+
+  <!-- Settings -->
+  <div class="tab-panel" id="panel-settings">
+    <div class="container">
+      <div class="panel-header">
+        <h2>Settings</h2>
+        <p class="subtitle">Manage your recipe tags</p>
+      </div>
+      <div class="settings-section">
+        <h3>Recipe Tags</h3>
+        <p class="section-desc">Create tags to organise and filter your recipes.</p>
+        <div class="tags-manager" id="tags-manager"></div>
+        <div class="add-tag-form" style="margin-top:16px">
+          <input type="text" id="new-tag-input" placeholder="New tag name…" maxlength="20">
+          <div class="color-picker-row" id="color-picker"></div>
+          <button class="btn-add" style="padding:10px 16px;font-size:0.88rem" onclick="addTag()">Add tag</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -592,6 +647,10 @@
         <label>Notes</label>
         <textarea id="rf-notes" placeholder="Tips, variations, serving suggestions…" rows="3"></textarea>
         <p class="form-hint">Supports markdown: **bold**, *italic*, - bullet</p>
+      </div>
+      <div class="form-field">
+        <label>Tags</label>
+        <div class="tag-toggles" id="rf-tags"></div>
       </div>
       <div class="form-actions">
         <button class="btn-primary" style="width:auto;padding:11px 28px" onclick="saveRecipe()">Save recipe</button>
@@ -668,8 +727,10 @@
   const auth = isConfigured ? getAuth(app) : null;
   const db = isConfigured ? getDatabase(app) : null;
 
-  let shoppingItems = [], recipes = [];
-  let shoppingRef = null, recipesRef = null;
+  let shoppingItems = [], recipes = [], userTags = [];
+  let shoppingRef = null, recipesRef = null, tagsRef = null;
+  const TAG_COLORS = ['#2d6a4f','#e07b39','#9b59b6','#2980b9','#c0392b','#16a085','#d4a017','#7f8c8d'];
+  let selectedColor = TAG_COLORS[0];
   let editingRecipeId = null, photoBase64 = null;
 
   if (auth) {
@@ -706,12 +767,29 @@
       recipes = d ? Object.entries(d).map(([id,v]) => ({id,...v})) : [];
       renderRecipes();
     });
+
+    tagsRef = ref(db, `users/${uid}/tags`);
+    onValue(tagsRef, snap => {
+      const d = snap.val();
+      if (d) {
+        userTags = Object.entries(d).map(([id,v]) => ({id,...v}));
+      } else {
+        // Seed default tags on first use
+        const defaults = [{name:'Winner',color:'#2d6a4f'},{name:'To try',color:'#e07b39'},{name:'Fail',color:'#c0392b'}];
+        defaults.forEach(t => push(tagsRef, t));
+        userTags = [];
+      }
+      renderTagsManager();
+      renderTagFilter();
+      renderTagToggles();
+    });
   }
 
   function disconnectData() {
     if (shoppingRef) { off(shoppingRef); shoppingRef = null; }
     if (recipesRef) { off(recipesRef); recipesRef = null; }
-    shoppingItems = []; recipes = [];
+    if (tagsRef) { off(tagsRef); tagsRef = null; }
+    shoppingItems = []; recipes = []; userTags = [];
   }
 
   window.signIn = async function() {
@@ -850,10 +928,105 @@
     }
   }
 
+
+  // ── Tags ──
+  function tagChipHtml(tag, clickable) {
+    return `<span class="tag-chip${clickable ? ' clickable' : ''}" style="background:${tag.color}20;color:${tag.color};border:1.5px solid ${tag.color}40">${escHtml(tag.name)}</span>`;
+  }
+
+  function renderTagsManager() {
+    const mgr = document.getElementById('tags-manager');
+    if (!mgr) return;
+    if (userTags.length === 0) {
+      mgr.innerHTML = '<p style="color:var(--muted);font-size:0.88rem;font-weight:300">No tags yet — add one below!</p>';
+    } else {
+      mgr.innerHTML = userTags.map(tag => `
+        <div class="tag-manager-row">
+          ${tagChipHtml(tag, false)}
+          <span class="tag-name">${escHtml(tag.name)}</span>
+          <button class="btn-icon" onclick="deleteTag('${tag.id}')" title="Delete">✕</button>
+        </div>`).join('');
+    }
+    renderColorPicker();
+  }
+
+  function renderColorPicker() {
+    const picker = document.getElementById('color-picker');
+    if (!picker) return;
+    picker.innerHTML = TAG_COLORS.map(c =>
+      `<button class="color-btn${c === selectedColor ? ' selected' : ''}" style="background:${c}" onclick="selectColor('${c}')" title="${c}"></button>`
+    ).join('');
+  }
+
+  function renderTagFilter() {
+    const sel = document.getElementById('tag-filter');
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All tags</option>' +
+      userTags.map(t => `<option value="${escHtml(t.id)}"${t.id === current ? ' selected' : ''}>${escHtml(t.name)}</option>`).join('');
+    sel.style.display = userTags.length > 0 ? '' : 'none';
+  }
+
+  function renderTagToggles() {
+    const container = document.getElementById('rf-tags');
+    if (!container) return;
+    const selectedIds = Array.from(container.querySelectorAll('.tag-toggle.selected')).map(b => b.dataset.id);
+    if (userTags.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-weight:300">No tags yet — create some in Settings</p>';
+      return;
+    }
+    container.innerHTML = userTags.map(tag => `
+      <button class="tag-toggle${selectedIds.includes(tag.id) ? ' selected' : ''}"
+        data-id="${tag.id}"
+        style="${selectedIds.includes(tag.id) ? `background:${tag.color};` : ''}"
+        onclick="toggleTagOnRecipe('${tag.id}', '${tag.color}', this)">
+        ${escHtml(tag.name)}
+      </button>`).join('');
+  }
+
+  window.toggleTagOnRecipe = function(id, color, btn) {
+    btn.classList.toggle('selected');
+    if (btn.classList.contains('selected')) btn.style.background = color;
+    else btn.style.background = '';
+  };
+
+  window.selectColor = function(color) {
+    selectedColor = color;
+    renderColorPicker();
+  };
+
+  window.addTag = function() {
+    const input = document.getElementById('new-tag-input');
+    const name = input.value.trim();
+    if (!name || !tagsRef) return;
+    if (userTags.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+      showToast('Tag already exists!'); return;
+    }
+    push(tagsRef, { name, color: selectedColor });
+    input.value = '';
+  };
+
+  window.deleteTag = function(id) {
+    if (!tagsRef) return;
+    if (!confirm('Delete this tag? It will be removed from all recipes.')) return;
+    if (auth.currentUser) remove(ref(db, `users/${auth.currentUser.uid}/tags/${id}`));
+    // Remove tag from all recipes
+    if (auth.currentUser) {
+      const uid = auth.currentUser.uid;
+      recipes.forEach(r => {
+        if (r.tags && r.tags[id]) {
+          remove(ref(db, `users/${uid}/recipes/${r.id}/tags/${id}`));
+        }
+      });
+    }
+  };
+
   // ── Recipes ──
   window.renderRecipes = function() {
     const filter = document.getElementById('recipe-filter')?.value || '';
-    const filtered = filter ? recipes.filter(r => r.category === filter) : recipes;
+    const tagFilter = document.getElementById('tag-filter')?.value || '';
+    let filtered = filter ? recipes.filter(r => r.category === filter) : [...recipes];
+    if (tagFilter) filtered = filtered.filter(r => r.tags && r.tags[tagFilter]);
     const countEl = document.getElementById('recipe-count-text');
     if (countEl) countEl.textContent = recipes.length === 0
       ? 'No recipes yet — add your first one!'
@@ -876,6 +1049,7 @@
           <div class="recipe-card-category">${escHtml(r.category || '')}</div>
           <div class="recipe-card-name">${escHtml(r.name)}</div>
           <div class="recipe-card-meta">${r.ingredients && r.ingredients.length ? r.ingredients.length + ' ingredient' + (r.ingredients.length !== 1 ? 's' : '') : 'No ingredients'}</div>
+          ${r.tags && Object.keys(r.tags).length ? `<div class="recipe-card-tags">${userTags.filter(t => r.tags && r.tags[t.id]).map(t => tagChipHtml(t, false)).join('')}</div>` : ''}
         </div>
       </div>`).join('');
   };
@@ -914,6 +1088,7 @@
       </div>
       <div class="recipe-detail-category">${escHtml(r.category || '')}</div>
       <div class="recipe-detail-name">${escHtml(r.name)}</div>
+      ${r.tags && Object.keys(r.tags).length ? `<div class="recipe-tags">${userTags.filter(t => r.tags && r.tags[t.id]).map(t => tagChipHtml(t, false)).join('')}</div>` : ''}
       ${sourceHtml}
       ${r.ingredients && r.ingredients.length
         ? `<button class="btn-add-to-list" id="add-to-list-btn" onclick="addRecipeToList('${id}')">🛒 Add ingredients to shopping list</button>`
@@ -973,6 +1148,7 @@
     document.getElementById('photo-placeholder').style.display = 'block';
     document.getElementById('ingredient-builder').innerHTML = '';
     addIngredientRow();
+    renderTagToggles();
     showFormView();
   };
 
@@ -998,6 +1174,18 @@
     builder.innerHTML = '';
     if (r.ingredients && r.ingredients.length) r.ingredients.forEach(ing => addIngredientRow(ing.qty, ing.name));
     else addIngredientRow();
+    // Pre-select existing tags
+    renderTagToggles();
+    if (r.tags) {
+      setTimeout(() => {
+        document.querySelectorAll('#rf-tags .tag-toggle').forEach(btn => {
+          if (r.tags[btn.dataset.id]) {
+            btn.classList.add('selected');
+            btn.style.background = userTags.find(t => t.id === btn.dataset.id)?.color || '';
+          }
+        });
+      }, 50);
+    }
     showFormView();
   };
 
@@ -1061,6 +1249,10 @@
       return { qty: inputs[0].value.trim(), name: inputs[1].value.trim() };
     }).filter(ing => ing.name);
 
+    const selectedTagBtns = document.querySelectorAll('#rf-tags .tag-toggle.selected');
+    const tags = {};
+    selectedTagBtns.forEach(btn => { tags[btn.dataset.id] = true; });
+
     const recipeData = {
       name,
       category: document.getElementById('rf-category').value,
@@ -1068,6 +1260,7 @@
       method: document.getElementById('rf-method').value.trim(),
       notes: document.getElementById('rf-notes').value.trim(),
       ingredients,
+      tags,
       photo: photoBase64 || null,
       updatedAt: Date.now()
     };
