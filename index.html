@@ -1126,6 +1126,8 @@
     document.getElementById('url-import-modal').classList.remove('open');
   };
 
+  const WORKER_URL = 'https://shlist.marijepierson.workers.dev';
+
   window.importFromUrl = async function() {
     const url = document.getElementById('import-url-input').value.trim();
     if (!url) return;
@@ -1139,49 +1141,16 @@
     status.innerHTML = '<span class="spinner"></span> Claude is reading the recipe…';
 
     try {
-      // Fetch the page content via a CORS proxy
-      const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-      const pageRes = await fetch(proxyUrl);
-      const pageData = await pageRes.json();
-
-      if (!pageData.contents) throw new Error('Could not fetch the page.');
-
-      // Strip HTML tags to get plain text for Claude
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(pageData.contents, 'text/html');
-      // Remove scripts and styles
-      doc.querySelectorAll('script, style, nav, footer, header, aside').forEach(el => el.remove());
-      const pageText = (doc.body?.innerText || doc.body?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 8000);
-
-      if (!pageText || pageText.length < 100) throw new Error('Could not extract text from this page.');
-
-      status.innerHTML = '<span class="spinner"></span> Extracting recipe details…';
-
-      // Call Claude API
-      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch(WORKER_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1500,
-          system: 'You are a recipe extraction assistant. Extract recipe details from the provided webpage text and return ONLY valid JSON with no markdown, no backticks, no explanation. Return exactly this structure: {"name":"","category":"","source":"","ingredients":[{"qty":"","name":""}],"method":"","notes":""}. For category choose one of: Breakfast, Lunch, Dinner, Baking, Soups, Salads, Desserts, Snacks, Condiments, Drinks. If unsure use Dinner. Keep method as plain text with newlines between steps. Keep notes brief.',
-          messages: [{ role: 'user', content: 'Extract the recipe from this webpage text. URL: ' + url + '\n\n' + pageText }]
-        })
+        body: JSON.stringify({ url })
       });
 
-      if (!claudeRes.ok) throw new Error('Claude API error: ' + claudeRes.status);
+      const recipe = await res.json();
 
-      const claudeData = await claudeRes.json();
-      const rawText = claudeData.content.map(b => b.text || '').join('').trim();
-
-      let recipe;
-      try {
-        recipe = JSON.parse(rawText);
-      } catch(e) {
-        // Try to extract JSON if wrapped in anything
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) recipe = JSON.parse(jsonMatch[0]);
-        else throw new Error('Could not parse recipe data.');
+      if (!res.ok || recipe.error) {
+        throw new Error(recipe.error || 'Something went wrong.');
       }
 
       if (!recipe.name) throw new Error('No recipe found on this page.');
@@ -1189,12 +1158,11 @@
       // Close modal and populate form
       document.getElementById('url-import-modal').classList.remove('open');
 
-      // Open form with extracted data
       editingRecipeId = null; photoBase64 = null;
       document.getElementById('form-title').textContent = 'New Recipe';
       document.getElementById('rf-name').value = recipe.name || '';
       document.getElementById('rf-category').value = recipe.category || 'Dinner';
-      document.getElementById('rf-source').value = recipe.source || url;
+      document.getElementById('rf-source').value = url;
       document.getElementById('rf-method').value = recipe.method || '';
       document.getElementById('rf-notes').value = recipe.notes || '';
       document.getElementById('photo-preview').style.display = 'none';
@@ -1218,38 +1186,3 @@
       btn.textContent = 'Try again';
     }
   };
-
-  let editingItemId = null;
-
-  window.openEditItem = function(id) {
-    const item = shoppingItems.find(i => i.id === id);
-    if (!item) return;
-    editingItemId = id;
-    document.getElementById('edit-item-name').value = item.name;
-    document.getElementById('edit-item-category').value = item.category || 'Other';
-    document.getElementById('edit-modal').classList.add('open');
-    setTimeout(() => document.getElementById('edit-item-name').select(), 50);
-  };
-
-  window.saveEditItem = function() {
-    if (!editingItemId || !db || !auth.currentUser) return;
-    const name = document.getElementById('edit-item-name').value.trim();
-    const category = document.getElementById('edit-item-category').value;
-    if (!name) return;
-    update(ref(db, `users/${auth.currentUser.uid}/shoppingList/${editingItemId}`), { name, category });
-    closeEditModal();
-  };
-
-  window.closeEditModal = function(e) {
-    if (e && e.target !== document.getElementById('edit-modal')) return;
-    document.getElementById('edit-modal').classList.remove('open');
-    editingItemId = null;
-  };
-
-  document.getElementById('item-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.addItem(); });
-  document.getElementById('login-password')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.signIn(); });
-  document.getElementById('edit-item-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.saveEditItem(); if (e.key === 'Escape') window.closeEditModal(); });
-  document.getElementById('import-url-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.importFromUrl(); if (e.key === 'Escape') window.closeUrlImportModal(); });
-</script>
-</body>
-</html>
