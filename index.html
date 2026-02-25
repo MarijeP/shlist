@@ -507,24 +507,23 @@
         Open this file in a text editor and replace the placeholder values in the firebaseConfig block.
       </div>
       <div class="add-form">
-        <input type="text" id="qty-input" placeholder="Qty" autocomplete="off" class="qty-field">
         <input type="text" id="item-input" placeholder="Add an item…" autocomplete="off">
         <select id="category-select" onchange="addItem()">
           <option value="Bakery">Bakery</option>
           <option value="Beverages">Beverages</option>
+          <option value="Booze">Booze</option>
+          <option value="Canned Food">Canned Food</option>
           <option value="Condiments">Condiments</option>
           <option value="Dairy">Dairy</option>
           <option value="Fresh Produce">Fresh Produce</option>
           <option value="Household &amp; Cleaning">Household &amp; Cleaning</option>
           <option value="Meat">Meat</option>
           <option value="Medication">Medication</option>
-          <option value="Pets">Pets</option>
-          <option value="Booze">Booze</option>
-          <option value="Canned Food">Canned Food</option>
+          <option value="Other">Other</option>
           <option value="Other Pantry Items">Other Pantry Items</option>
+          <option value="Pets">Pets</option>
           <option value="Snacks">Snacks</option>
           <option value="Toiletries">Toiletries</option>
-          <option value="Other">Other</option>
         </select>
       </div>
       <div id="active-list"></div>
@@ -1091,7 +1090,7 @@
       ${r.tags && Object.keys(r.tags).length ? `<div class="recipe-tags">${userTags.filter(t => r.tags && r.tags[t.id]).map(t => tagChipHtml(t, false)).join('')}</div>` : ''}
       ${sourceHtml}
       ${r.ingredients && r.ingredients.length
-        ? `<button class="btn-add-to-list" id="add-to-list-btn" onclick="addRecipeToList('${id}')">🛒 Add ingredients to shopping list</button>`
+        ? `<button class="btn-add-to-list" id="add-to-list-btn" onclick="addRecipeToList('${id}')">🛒 Add all ingredients to shopping list</button>`
         : ''}
       ${ingredientsHtml}${methodHtml}${notesHtml}
       <div class="detail-actions">
