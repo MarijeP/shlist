@@ -1,7 +1,9 @@
 // shlist Recipe Import Worker
 // Fetches a recipe page and uses Claude to extract recipe details
 
-const ALLOWED_ORIGIN = 'https://marijep.github.io';
+const ALLOWED_ORIGIN = request.headers.get('Origin') === 'http://localhost:8080' 
+  ? 'http://localhost:8080' 
+  : 'https://marijep.github.io';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
