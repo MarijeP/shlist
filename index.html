@@ -457,6 +457,35 @@
   .store-filter-btn.active { background:var(--accent); border-color:var(--accent); color:white; }
   .item-store { font-size:0.72rem; font-weight:500; color:var(--muted); background:var(--bg); border:1.5px solid var(--border); border-radius:20px; padding:2px 8px; flex-shrink:0; white-space:nowrap; }
 
+
+  /* ── LISTS HOME ── */
+  .lists-grid { display:flex; flex-direction:column; gap:12px; }
+  .list-card { background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:18px 20px; cursor:pointer; transition:border-color 0.2s, box-shadow 0.2s; display:flex; align-items:center; gap:16px; }
+  .list-card:hover { border-color:var(--accent); box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+  .list-card-icon { font-size:1.6rem; flex-shrink:0; }
+  .list-card-body { flex:1; }
+  .list-card-name { font-family:'DM Serif Display',serif; font-size:1.1rem; font-weight:400; }
+  .list-card-meta { font-size:0.8rem; color:var(--muted); font-weight:300; margin-top:2px; }
+  .list-card-arrow { color:var(--border); font-size:1.1rem; flex-shrink:0; }
+  .btn-new-list { display:flex; align-items:center; gap:8px; padding:14px 20px; background:none; border:1.5px dashed var(--border); border-radius:14px; font-family:'DM Sans',sans-serif; font-size:0.92rem; color:var(--muted); cursor:pointer; transition:border-color 0.2s,color 0.2s; width:100%; }
+  .btn-new-list:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* List view header with back button */
+  .list-view-header { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+  .list-view-header h2 { font-family:'DM Serif Display',serif; font-size:1.8rem; font-weight:400; flex:1; }
+  .btn-back-lists { background:none; border:none; font-family:'DM Sans',sans-serif; font-size:0.85rem; color:var(--muted); cursor:pointer; padding:6px 0; display:flex; align-items:center; gap:4px; transition:color 0.15s; white-space:nowrap; }
+  .btn-back-lists:hover { color:var(--accent); }
+
+  /* New list modal */
+  .new-list-modal { background:var(--surface); border-radius:16px; padding:28px 24px 24px; width:100%; max-width:400px; box-shadow:0 8px 40px rgba(0,0,0,0.12); transform:translateY(12px); transition:transform 0.2s; }
+  .modal-overlay.open .new-list-modal { transform:translateY(0); }
+  .new-list-modal h3 { font-family:'DM Serif Display',serif; font-size:1.3rem; font-weight:400; margin-bottom:20px; }
+  .list-type-options { display:flex; gap:10px; margin-bottom:20px; }
+  .list-type-btn { flex:1; padding:14px 10px; border:1.5px solid var(--border); border-radius:12px; background:none; font-family:'DM Sans',sans-serif; font-size:0.85rem; color:var(--muted); cursor:pointer; text-align:center; transition:all 0.15s; }
+  .list-type-btn .type-icon { display:block; font-size:1.4rem; margin-bottom:6px; }
+  .list-type-btn.selected { border-color:var(--accent); color:var(--accent); background:#f0f8f4; }
+  .list-type-btn:hover:not(.selected) { border-color:var(--muted); }
+
   .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:white; padding:10px 20px; border-radius:10px; font-size:0.88rem; opacity:0; transition:opacity 0.3s,transform 0.3s; pointer-events:none; z-index:100; white-space:nowrap; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
@@ -492,27 +521,41 @@
   <div class="tab-bar">
 
     <div class="tabs">
-      <button class="tab active" id="tab-shopping" onclick="switchTab('shopping')">🛒 Shopping</button>
+      <button class="tab active" id="tab-lists" onclick="switchTab('lists')">📋 Lists</button>
       <button class="tab" id="tab-recipes" onclick="switchTab('recipes')">🍳 Recipes</button>
       <button class="tab" id="tab-settings" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
     <button class="btn-signout" onclick="signOut()">Sign out</button>
   </div>
 
-  <!-- Shopping -->
-  <div class="tab-panel active" id="panel-shopping">
+  <!-- Lists home -->
+  <div class="tab-panel active" id="panel-lists">
     <div class="container">
       <div class="panel-header">
-        <h2>Shopping List</h2>
-        <p class="subtitle" id="stats-text">Loading…</p>
-        <div class="sync-status">
-          <div class="sync-dot connecting" id="sync-dot"></div>
-          <span id="sync-label">Connecting…</span>
-        </div>
+        <h2>My Lists</h2>
+        <p class="subtitle" id="lists-subtitle">Your lists</p>
       </div>
       <div class="config-banner" id="config-banner" style="display:none">
         <strong>⚠️ Firebase not configured yet</strong>
         Open this file in a text editor and replace the placeholder values in the firebaseConfig block.
+      </div>
+      <div class="lists-grid" id="lists-grid"></div>
+      <div style="margin-top:12px">
+        <button class="btn-new-list" onclick="openNewListModal()"><span>＋</span> New list</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- List view (shopping type) -->
+  <div id="list-view-shopping" style="display:none; padding:36px 16px 80px;">
+    <div class="container">
+      <div class="list-view-header">
+        <button class="btn-back-lists" onclick="backToLists()">← Lists</button>
+        <h2 id="shopping-list-title">Shopping List</h2>
+      </div>
+      <div class="sync-status" style="margin-bottom:20px">
+        <div class="sync-dot connecting" id="sync-dot"></div>
+        <span id="sync-label">Connecting…</span>
       </div>
       <div class="add-form">
         <input type="text" id="item-input" placeholder="Add an item…" autocomplete="off">
@@ -541,6 +584,26 @@
         <span class="arrow">▼</span>
       </button>
       <div class="checked-section" id="checked-section"></div>
+    </div>
+  </div>
+
+  <!-- List view (generic type) -->
+  <div id="list-view-generic" style="display:none; padding:36px 16px 80px;">
+    <div class="container">
+      <div class="list-view-header">
+        <button class="btn-back-lists" onclick="backToLists()">← Lists</button>
+        <h2 id="generic-list-title">List</h2>
+      </div>
+      <div class="add-form">
+        <input type="text" id="generic-item-input" placeholder="Add an item…" autocomplete="off">
+        <button class="btn-add" onclick="addGenericItem()">Add</button>
+      </div>
+      <div id="generic-active-list"></div>
+      <button class="checked-toggle" id="generic-checked-toggle" onclick="toggleGenericChecked()" style="display:none">
+        <span id="generic-checked-label">🗂 Checked off items</span>
+        <span class="arrow">▼</span>
+      </button>
+      <div class="checked-section" id="generic-checked-section"></div>
     </div>
   </div>
 
@@ -677,6 +740,27 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="new-list-modal" onclick="closeNewListModal(event)">
+  <div class="new-list-modal">
+    <h3>New list</h3>
+    <div class="list-type-options">
+      <button class="list-type-btn selected" id="type-btn-shopping" onclick="selectListType('shopping')">
+        <span class="type-icon">🛒</span>Shopping
+      </button>
+      <button class="list-type-btn" id="type-btn-generic" onclick="selectListType('generic')">
+        <span class="type-icon">📝</span>Generic
+      </button>
+    </div>
+    <div class="form-field">
+      <label>List name</label>
+      <input type="text" id="new-list-name" placeholder="e.g. Packing list, To-do…" maxlength="40">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="createNewList()">Create list</button>
+      <button class="btn-secondary" onclick="closeNewListModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
   <div class="modal">
     <h3>Edit item</h3>
@@ -748,9 +832,11 @@
   const auth = isConfigured ? getAuth(app) : null;
   const db = isConfigured ? getDatabase(app) : null;
 
-  let shoppingItems = [], recipes = [], userTags = [], userStores = [];
-  let shoppingRef = null, recipesRef = null, tagsRef = null, storesRef = null;
-  let activeStoreFilter = '';
+  let shoppingItems = [], recipes = [], userTags = [], userStores = [], userLists = [];
+  let shoppingRef = null, recipesRef = null, tagsRef = null, storesRef = null, listsRef = null;
+  let activeStoreFilter = '', activeListId = null, activeListType = null;
+  let genericItemsRef = null, genericItems = [];
+  let newListType = 'shopping';
   const TAG_COLORS = ['#2d6a4f','#e07b39','#9b59b6','#2980b9','#c0392b','#16a085','#d4a017','#7f8c8d'];
   let selectedColor = TAG_COLORS[0];
   let editingRecipeId = null, photoBase64 = null;
@@ -774,6 +860,22 @@
 
   function connectData(uid) {
     disconnectData();
+
+    // Lists index
+    listsRef = ref(db, `users/${uid}/lists`);
+    onValue(listsRef, snap => {
+      const d = snap.val();
+      if (d) {
+        userLists = Object.entries(d).map(([id,v]) => ({id,...v}));
+      } else {
+        // Migrate existing shoppingList into the new lists structure
+        push(listsRef, { name: 'Shopping List', type: 'shopping', createdAt: Date.now() });
+        userLists = [];
+      }
+      renderListsHome();
+    });
+
+    // Keep shoppingRef connected for whichever shopping list is open
     shoppingRef = ref(db, `users/${uid}/shoppingList`);
     setSyncStatus('connecting', 'Connecting…');
     onValue(shoppingRef, snap => {
@@ -821,7 +923,10 @@
     if (recipesRef) { off(recipesRef); recipesRef = null; }
     if (tagsRef) { off(tagsRef); tagsRef = null; }
     if (storesRef) { off(storesRef); storesRef = null; }
-    shoppingItems = []; recipes = []; userTags = []; userStores = []; activeStoreFilter = '';
+    if (listsRef) { off(listsRef); listsRef = null; }
+    if (genericItemsRef) { off(genericItemsRef); genericItemsRef = null; }
+    shoppingItems = []; recipes = []; userTags = []; userStores = []; userLists = []; genericItems = [];
+    activeStoreFilter = ''; activeListId = null; activeListType = null;
   }
 
   window.signIn = async function() {
@@ -858,8 +963,169 @@
     document.getElementById('panel-' + tab).classList.add('active');
     document.getElementById('recipe-detail').classList.remove('active');
     document.getElementById('recipe-form').classList.remove('active');
+    document.getElementById('list-view-shopping').style.display = 'none';
+    document.getElementById('list-view-generic').style.display = 'none';
   };
 
+
+
+  // ── Lists ──
+  function renderListsHome() {
+    const grid = document.getElementById('lists-grid');
+    const sub = document.getElementById('lists-subtitle');
+    if (!grid) return;
+    if (sub) sub.textContent = userLists.length === 1 ? '1 list' : `${userLists.length} lists`;
+    if (userLists.length === 0) {
+      grid.innerHTML = '<p style="color:var(--muted);font-size:0.88rem;font-weight:300;margin-bottom:16px">No lists yet — create your first one!</p>';
+      return;
+    }
+    grid.innerHTML = userLists.map(list => {
+      const icon = list.type === 'shopping' ? '🛒' : '📝';
+      const meta = list.type === 'shopping' ? 'Shopping list' : 'Generic list';
+      return `<div class="list-card" onclick="openList('${list.id}')">
+        <span class="list-card-icon">${icon}</span>
+        <div class="list-card-body">
+          <div class="list-card-name">${escHtml(list.name)}</div>
+          <div class="list-card-meta">${meta}</div>
+        </div>
+        <span class="list-card-arrow">›</span>
+      </div>`;
+    }).join('');
+  }
+
+  window.openList = function(listId) {
+    const list = userLists.find(l => l.id === listId);
+    if (!list) return;
+    activeListId = listId;
+    activeListType = list.type;
+
+    // Hide all panels and list views
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('list-view-shopping').style.display = 'none';
+    document.getElementById('list-view-generic').style.display = 'none';
+
+    if (list.type === 'shopping') {
+      document.getElementById('shopping-list-title').textContent = list.name;
+      document.getElementById('list-view-shopping').style.display = 'block';
+    } else {
+      document.getElementById('generic-list-title').textContent = list.name;
+      document.getElementById('list-view-generic').style.display = 'block';
+      connectGenericList(listId);
+    }
+  };
+
+  window.backToLists = function() {
+    // Disconnect generic list if open
+    if (genericItemsRef) { off(genericItemsRef); genericItemsRef = null; genericItems = []; }
+    activeListId = null; activeListType = null;
+    document.getElementById('list-view-shopping').style.display = 'none';
+    document.getElementById('list-view-generic').style.display = 'none';
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-lists').classList.add('active');
+    document.getElementById('tab-lists').classList.add('active');
+  };
+
+  function connectGenericList(listId) {
+    if (genericItemsRef) { off(genericItemsRef); genericItemsRef = null; }
+    if (!auth.currentUser) return;
+    genericItemsRef = ref(db, `users/${auth.currentUser.uid}/genericLists/${listId}`);
+    onValue(genericItemsRef, snap => {
+      const d = snap.val();
+      genericItems = d ? Object.entries(d).map(([id,v]) => ({id,...v})) : [];
+      renderGenericList();
+    });
+  }
+
+  function renderGenericList() {
+    const active = genericItems.filter(i => !i.checked);
+    const checked = genericItems.filter(i => i.checked);
+
+    const activeEl = document.getElementById('generic-active-list');
+    if (!activeEl) return;
+
+    if (active.length === 0) {
+      activeEl.innerHTML = checked.length === 0
+        ? '<div class="empty"><span>📝</span>List is empty</div>'
+        : '<div class="empty"><span>✅</span>All done!</div>';
+    } else {
+      activeEl.innerHTML = '<ul class="items-list">' +
+        active.map(item => `
+          <li class="item">
+            <input type="checkbox" class="item-check" onchange="toggleGenericCheck('${item.id}')">
+            <span class="item-name">${escHtml(item.name)}</span>
+            <button class="btn-icon" onclick="deleteGenericItem('${item.id}')" title="Remove">✕</button>
+          </li>`).join('') + '</ul>';
+    }
+
+    const toggleBtn = document.getElementById('generic-checked-toggle');
+    const checkedEl = document.getElementById('generic-checked-section');
+    if (checked.length === 0) {
+      toggleBtn.style.display = 'none'; checkedEl.innerHTML = '';
+    } else {
+      toggleBtn.style.display = 'flex';
+      document.getElementById('generic-checked-label').textContent = `🗂 Checked off items (${checked.length})`;
+      checkedEl.innerHTML = '<ul class="items-list">' +
+        checked.map(item => `
+          <li class="item checked">
+            <input type="checkbox" class="item-check" checked onchange="toggleGenericCheck('${item.id}')">
+            <span class="item-name">${escHtml(item.name)}</span>
+            <button class="btn-icon" onclick="deleteGenericItem('${item.id}')" title="Remove">✕</button>
+          </li>`).join('') + '</ul>';
+    }
+  }
+
+  window.addGenericItem = function() {
+    const input = document.getElementById('generic-item-input');
+    const name = input.value.trim();
+    if (!name || !genericItemsRef) return;
+    push(genericItemsRef, { name, checked: false });
+    input.value = '';
+    input.focus();
+  };
+
+  window.toggleGenericCheck = function(id) {
+    const item = genericItems.find(i => i.id === id);
+    if (item && genericItemsRef)
+      update(ref(db, genericItemsRef.toString() + '/' + id), { checked: !item.checked });
+  };
+
+  window.deleteGenericItem = function(id) {
+    if (genericItemsRef)
+      remove(ref(db, genericItemsRef.toString() + '/' + id));
+  };
+
+  window.toggleGenericChecked = function() {
+    document.getElementById('generic-checked-section').classList.toggle('visible');
+    document.getElementById('generic-checked-toggle').classList.toggle('open');
+  };
+
+  window.openNewListModal = function() {
+    newListType = 'shopping';
+    document.getElementById('type-btn-shopping').classList.add('selected');
+    document.getElementById('type-btn-generic').classList.remove('selected');
+    document.getElementById('new-list-name').value = '';
+    document.getElementById('new-list-modal').classList.add('open');
+    setTimeout(() => document.getElementById('new-list-name').focus(), 50);
+  };
+
+  window.closeNewListModal = function(e) {
+    if (e && e.target !== document.getElementById('new-list-modal')) return;
+    document.getElementById('new-list-modal').classList.remove('open');
+  };
+
+  window.selectListType = function(type) {
+    newListType = type;
+    document.getElementById('type-btn-shopping').classList.toggle('selected', type === 'shopping');
+    document.getElementById('type-btn-generic').classList.toggle('selected', type === 'generic');
+  };
+
+  window.createNewList = function() {
+    const name = document.getElementById('new-list-name').value.trim();
+    if (!name || !listsRef) return;
+    push(listsRef, { name, type: newListType, createdAt: Date.now() });
+    document.getElementById('new-list-modal').classList.remove('open');
+    showToast(`"${name}" created!`);
+  };
 
   // ── Stores ──
   function renderStoresManager() {
@@ -914,7 +1180,7 @@
     if (!storesRef) return;
     if (!confirm('Delete this store? Items assigned to it will become unassigned.')) return;
     if (auth.currentUser) {
-      remove(ref(db, `users/${auth.currentUser.uid}/stores/${id}`));
+      if (auth.currentUser) remove(ref(db, `users/${auth.currentUser.uid}/stores/${id}`));
       // Clear store from any items that had it
       shoppingItems.forEach(item => {
         if (item.store === id) {
@@ -1547,6 +1813,8 @@
   document.getElementById('login-password')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.signIn(); });
   document.getElementById('edit-item-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.saveEditItem(); if (e.key === 'Escape') window.closeEditModal(); });
   document.getElementById('import-url-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.importFromUrl(); if (e.key === 'Escape') window.closeUrlImportModal(); });
+  document.getElementById('generic-item-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.addGenericItem(); });
+  document.getElementById('new-list-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.createNewList(); if (e.key === 'Escape') window.closeNewListModal(); });
 </script>
 </body>
 </html>
