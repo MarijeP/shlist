@@ -991,7 +991,7 @@
                 <input type="checkbox" class="item-check" onchange="toggleCheck('${item.id}')">
                 ${item.qty ? `<span class="item-qty">${escHtml(item.qty)}</span>` : ''}
                 <span class="item-name">${escHtml(item.name)}</span>
-                ${item.store ? `<span class="item-store">${escHtml(item.store)}</span>` : ''}
+                ${item.store ? `<span class="item-store">${escHtml(userStores.find(s => s.id === item.store)?.name || item.store)}</span>` : ''}
                 <button class="btn-icon" onclick="openEditItem('${item.id}')" title="Edit" style="color:var(--muted);font-size:0.85rem">✎</button>
                 <button class="btn-icon" onclick="deleteItem('${item.id}')" title="Remove">✕</button>
               </li>`).join('')}
@@ -1017,7 +1017,7 @@
                 <input type="checkbox" class="item-check" checked onchange="toggleCheck('${item.id}')">
                 ${item.qty ? `<span class="item-qty">${escHtml(item.qty)}</span>` : ''}
                 <span class="item-name">${escHtml(item.name)}</span>
-                ${item.store ? `<span class="item-store">${escHtml(item.store)}</span>` : ''}
+                ${item.store ? `<span class="item-store">${escHtml(userStores.find(s => s.id === item.store)?.name || item.store)}</span>` : ''}
                 <button class="btn-icon" onclick="openEditItem('${item.id}')" title="Edit" style="color:var(--muted);font-size:0.85rem">✎</button>
                 <button class="btn-icon" onclick="deleteItem('${item.id}')" title="Remove">✕</button>
               </li>`).join('')}
