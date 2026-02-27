@@ -1,4 +1,4 @@
-// shlist Recipe Import Worker
+// lista Recipe Import Worker
 // Fetches a recipe page and uses Claude to extract recipe details
 
 const ALLOWED_ORIGIN = request.headers.get('Origin') === 'http://localhost:8080' 
