@@ -350,6 +350,28 @@
   /* Prevent iOS Safari auto-zoom on input focus — triggers when font-size < 16px */
   @media (max-width: 768px) {
     input, select, textarea { font-size: 16px !important; }
+
+    /* Move nav to bottom for thumb accessibility */
+    .tab-bar {
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-bottom: none;
+      border-top: 1.5px solid var(--border);
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+    .nav-logo { display: none; }
+    .btn-signout { display: none; }
+    .tab { padding: 10px 10px 6px; font-size: 0.78rem; flex-direction: column; gap: 2px; }
+
+    /* Push panels up so content isn't hidden behind the nav */
+    .tab-panel, .list-view, #recipe-detail, #recipe-form {
+      padding-top: 20px;
+      padding-bottom: max(90px, calc(70px + env(safe-area-inset-bottom)));
+    }
   }
 
   .category-block { margin-bottom: 22px; animation: fadeIn 0.25s ease; }
