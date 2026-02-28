@@ -47,44 +47,6 @@
     overflow-y: auto;
   }
 
-  /* ── Top bar with sign in ── */
-  .login-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px;
-    background: var(--surface);
-    border-bottom: 1.5px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .login-topbar-logo {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: -0.3px;
-  }
-
-  .login-topbar-logo em { font-style: italic; color: var(--accent); }
-
-  .btn-signin-top {
-    padding: 8px 20px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-
-  .btn-signin-top:hover { opacity: 0.88; }
-
   /* ── Sign in modal overlay ── */
   .signin-overlay {
     display: none;
@@ -210,17 +172,13 @@
     text-align: center;
   }
 
-  .landing-hero h2 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 2.4rem;
-    font-weight: 700;
-    letter-spacing: -0.8px;
-    line-height: 1.2;
-    color: var(--text);
-    margin-bottom: 16px;
+  .landing-logo {
+    height: 52px;
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
-
-  .landing-hero h2 em { font-style: italic; color: var(--accent); }
 
   .landing-hero p {
     font-size: 1rem;
@@ -267,7 +225,6 @@
 
   @media (max-width: 520px) {
     .features-grid { grid-template-columns: 1fr; }
-    .landing-hero h2 { font-size: 1.8rem; }
   }
 
   .feature-card {
@@ -848,12 +805,6 @@
 <!-- LOGIN -->
 <div id="login-screen">
 
-  <!-- Top bar -->
-  <div class="login-topbar">
-    <span class="login-topbar-logo"><em>Lista</em></span>
-    <button class="btn-signin-top" onclick="openSignIn()">Sign in</button>
-  </div>
-
   <!-- Sign in modal -->
   <div class="signin-overlay" id="signin-overlay" onclick="handleOverlayClick(event)">
     <div class="login-card">
@@ -878,7 +829,7 @@
 
     <!-- Hero -->
     <div class="landing-hero">
-      <h2>Shopping lists that<br><em>work for you</em></h2>
+      <img src="data:image/png;base64,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" alt="Lista" class="landing-logo">
       <p>Lista keeps your shopping organised, your recipes close at hand, and your household in sync — all in one place.</p>
       <button class="btn-cta" onclick="openSignIn()">Get started — it's free</button>
     </div>
