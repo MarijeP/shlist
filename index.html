@@ -263,6 +263,19 @@
 
   .btn-add:hover { opacity: 0.88; }
 
+  .store-shortcut-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: #e9f5ef;
+    border: 1.5px solid #c8e8d8;
+    border-radius: 20px;
+    padding: 2px 8px;
+    margin-left: auto;
+    margin-right: 8px;
+    white-space: nowrap;
+  }
+
   .btn-danger {
     padding: 10px 22px;
     background: var(--danger);
@@ -659,9 +672,7 @@
       </div>
       <div class="add-form">
         <input type="text" id="item-input" placeholder="Add an item…" autocomplete="off">
-        <select id="category-select" onchange="addItem()">
-          <option value="Other">Other</option>
-        </select>
+        <button class="btn-add" onclick="addItem()">Add</button>
       </div>
       <div class="dupe-warning" id="dupe-warning" style="display:none">
         <span id="dupe-warning-text"></span>
@@ -754,10 +765,11 @@
           <span class="toggle-arrow">▼</span>
         </button>
         <div class="settings-section-body">
-          <p class="section-desc">Add the stores you shop at to assign and filter list items.</p>
+          <p class="section-desc">Add the stores you shop at to assign and filter list items. Add a shortcut (e.g. <code style="font-size:0.82rem;background:var(--bg);padding:1px 5px;border-radius:4px;border:1px solid var(--border)">#w</code>) to tag items quickly while adding them.</p>
           <div class="tags-manager" id="stores-manager"></div>
-          <div class="add-tag-form" style="margin-top:16px">
-            <input type="text" id="new-store-input" placeholder="Store name…" maxlength="30">
+          <div class="add-tag-form" style="margin-top:16px;flex-wrap:wrap;gap:8px">
+            <input type="text" id="new-store-input" placeholder="Store name…" maxlength="30" style="flex:2;min-width:120px">
+            <input type="text" id="new-store-shortcut" placeholder="#shortcut" maxlength="12" style="flex:1;min-width:80px">
             <button class="btn-add" style="padding:10px 16px;font-size:0.88rem" onclick="addStore()">Add store</button>
           </div>
         </div>
@@ -1579,6 +1591,7 @@
       mgr.innerHTML = userStores.map(s => `
         <div class="tag-manager-row">
           <span class="tag-name">${escHtml(s.name)}</span>
+          ${s.shortcut ? `<span class="store-shortcut-badge">${escHtml(s.shortcut)}</span>` : ''}
           <button class="btn-icon" onclick="deleteStore('${s.id}')" title="Delete">✕</button>
         </div>`).join('');
     }
@@ -1878,13 +1891,20 @@
 
   window.addStore = function() {
     const input = document.getElementById('new-store-input');
+    const shortcutInput = document.getElementById('new-store-shortcut');
     const name = input.value.trim();
+    let shortcut = (shortcutInput.value.trim() || '').toLowerCase();
+    if (!shortcut.startsWith('#') && shortcut) shortcut = '#' + shortcut;
     if (!name || !storesRef) return;
     if (userStores.some(s => s.name.toLowerCase() === name.toLowerCase())) {
       showToast('Store already exists!'); return;
     }
-    push(storesRef, { name });
+    if (shortcut && userStores.some(s => s.shortcut === shortcut)) {
+      showToast('That shortcut is already in use!'); return;
+    }
+    push(storesRef, { name, ...(shortcut ? { shortcut } : {}) });
     input.value = '';
+    shortcutInput.value = '';
   };
 
   window.deleteStore = function(id) {
@@ -1921,15 +1941,26 @@
   function doAddItem() {
     const input = document.getElementById('item-input');
     const qtyInput = document.getElementById('qty-input');
-    const sel = document.getElementById('category-select');
-    const cat = sel.value;
-    const name = input.value.trim();
+    let name = input.value.trim();
     const qty = qtyInput ? qtyInput.value.trim() : '';
     if (!name) return;
-    push(shoppingRef, { name, qty: qty || '', category: cat, checked: false });
+
+    // Parse store shortcut — find last #tag in the input
+    let storeId = '';
+    const hashMatch = name.match(/(#\S+)\s*$/);
+    if (hashMatch) {
+      const tag = hashMatch[1].toLowerCase();
+      const matched = userStores.find(s => s.shortcut && s.shortcut.toLowerCase() === tag);
+      if (matched) {
+        storeId = matched.id;
+        name = name.slice(0, hashMatch.index).trim();
+      }
+    }
+
+    const cat = guessCategory(name) || getCategoryDefault();
+    push(shoppingRef, { name, qty: qty || '', category: cat, store: storeId, checked: false });
     input.value = '';
     if (qtyInput) qtyInput.value = '';
-    sel.selectedIndex = 0;
     document.getElementById('dupe-warning').style.display = 'none';
     input.focus();
   }
@@ -1937,8 +1968,16 @@
   window.addItem = function() {
     if (!shoppingRef) return;
     const input = document.getElementById('item-input');
-    const name = input.value.trim();
+    let name = input.value.trim();
     if (!name) return;
+    // Strip store shortcut before dupe check
+    const hashMatch = name.match(/(#\S+)\s*$/);
+    if (hashMatch) {
+      const tag = hashMatch[1].toLowerCase();
+      if (userStores.some(s => s.shortcut && s.shortcut.toLowerCase() === tag)) {
+        name = name.slice(0, hashMatch.index).trim();
+      }
+    }
     const dupe = findDuplicate(name);
     if (dupe) {
       const label = dupe.checked ? 'already checked off' : 'already on your list';
@@ -1982,14 +2021,13 @@
     return cats && cats.length > 0 ? cats.map(c => c.name) : DEFAULT_CATEGORIES;
   }
 
+  function getCategoryDefault() {
+    const cats = getCategoriesForList(activeListId);
+    return cats.length ? cats[0] : 'Other';
+  }
+
   function renderCategorySelects() {
     const cats = getCategoriesForList(activeListId);
-    // Populate add-item category select
-    const sel = document.getElementById('category-select');
-    if (sel) {
-      const cur = sel.value;
-      sel.innerHTML = cats.map(c => `<option value="${escHtml(c)}"${c===cur?' selected':''}>${escHtml(c)}</option>`).join('');
-    }
     // Populate edit-item category select
     const editSel = document.getElementById('edit-item-category');
     if (editSel) {
@@ -2617,18 +2655,16 @@
   document.getElementById('item-input')?.addEventListener('input', e => {
     const name = e.target.value.trim();
     if (!name) document.getElementById('dupe-warning').style.display = 'none';
-    if (name.length < 2) return;
-    const guess = guessCategory(name);
-    if (!guess) return;
-    const sel = document.getElementById('category-select');
-    if (sel && [...sel.options].some(o => o.value === guess)) {
-      sel.value = guess;
-    }
+  });
+  document.getElementById('item-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.addItem();
   });
   document.getElementById('login-password')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.signIn(); });
   document.getElementById('edit-item-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.saveEditItem(); if (e.key === 'Escape') window.closeEditModal(); });
   document.getElementById('import-url-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.importFromUrl(); if (e.key === 'Escape') window.closeUrlImportModal(); });
   document.getElementById('generic-item-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.addGenericItem(); });
+  document.getElementById('new-store-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.addStore(); });
+  document.getElementById('new-store-shortcut')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.addStore(); });
   document.getElementById('new-list-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.createNewList(); if (e.key === 'Escape') window.closeNewListModal(); });
 
   // Register service worker for PWA offline support
