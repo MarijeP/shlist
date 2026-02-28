@@ -1300,6 +1300,10 @@
   function handleOverlayClick(e) {
     if (e.target === document.getElementById('signin-overlay')) closeSignIn();
   }
+  function signIn() {
+    if (typeof window._signIn === 'function') window._signIn();
+    else setTimeout(signIn, 100);
+  }
 </script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -1444,7 +1448,7 @@
     if (e.target === document.getElementById('signin-overlay')) closeSignIn();
   };
 
-  window.signIn = async function() {
+  window._signIn = async function() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const btn = document.getElementById('login-btn');
@@ -2993,7 +2997,7 @@
   document.getElementById('item-input')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') window.addItem();
   });
-  document.getElementById('login-password')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.signIn(); });
+  document.getElementById('login-password')?.addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); });
   document.getElementById('edit-item-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.saveEditItem(); if (e.key === 'Escape') window.closeEditModal(); });
   document.getElementById('import-url-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.importFromUrl(); if (e.key === 'Escape') window.closeUrlImportModal(); });
   document.getElementById('generic-item-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.addGenericItem(); });
