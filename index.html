@@ -2675,8 +2675,7 @@
 
   window.parsePasteList = function() {
     const raw = document.getElementById('paste-input').value;
-    const lines = raw.split('
-').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = raw.split(/\r?\n/).map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
     if (!lines.length) return;
 
     // Remove the empty placeholder row if it's the only one and both fields are empty
@@ -2689,27 +2688,25 @@
       }
     }
 
-    // Parse each line: leading number/fraction/unit = qty, rest = name
-    const qtyPattern = /^(\d[\d\/\.]*(\s+\d[\d\/\.]*)?(?:\s+(?:tablespoons?|tbsp|teaspoons?|tsp|cups?|oz|ounces?|lbs?|pounds?|grams?|g|kg|ml|l|litres?|liters?|cloves?|slices?|pieces?|medium|large|small|bunch|handful|pinch|can|cans|tin|tins|package|pkg|stalks?|heads?|sprigs?|sheets?))?\s*)/i;
+    // Split each line into qty (leading number + optional unit) and name
+    const unitWords = 'tablespoons?|tbsp|teaspoons?|tsp|cups?|oz|ounces?|lbs?|pounds?|grams?|g|kg|ml|l|litres?|liters?|cloves?|slices?|pieces?|medium|large|small|bunch|handful|pinch|can|cans|tin|tins|package|pkg|stalks?|heads?|sprigs?|sheets?';
+    const qtyPattern = new RegExp('^([\\d][\\d\/\.]*(?:\\s+[\\d][\\d\/\.]*)?(?:\\s+(?:' + unitWords + '))?\\s*)', 'i');
 
-    lines.forEach(line => {
+    lines.forEach(function(line) {
       const match = line.match(qtyPattern);
       let qty = '', name = line;
       if (match && match[0].trim()) {
         qty = match[0].trim();
-        name = line.slice(match[0].length).trim();
-        // Clean leading comma or dash
-        name = name.replace(/^[,\-]\s*/, '');
+        name = line.slice(match[0].length).trim().replace(/^[,\-]\s*/, '');
       }
       addIngredientRow(qty, name);
     });
 
-    // Hide paste area and clear it
     document.getElementById('paste-area').style.display = 'none';
     document.getElementById('paste-input').value = '';
   };
 
-  window.addIngredientRow = function(qty = '', name = '') {
+    window.addIngredientRow = function(qty = '', name = '') {
     const builder = document.getElementById('ingredient-builder');
     const row = document.createElement('div');
     row.className = 'ingredient-row-input';
